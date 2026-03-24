@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AFSC CFETP Download Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0e17;
+  --surface: #121929;
+  --surface2: #1a2338;
+  --border: #263050;
+  --text: #c8d6e5;
+  --text2: #8899aa;
+  --accent: #4ea8ff;
+  --accent2: #2dd4a8;
+  --accent3: #ff8c42;
+  --danger: #ff5c5c;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Source Sans 3', sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+}
+.noise {
+  position: fixed; top:0; left:0; width:100%; height:100%;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 0;
+}
+.container {
+  max-width: 1200px; margin: 0 auto; padding: 20px;
+  position: relative; z-index: 1;
+}
+header {
+  text-align: center; padding: 40px 0 30px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 30px;
+}
+header h1 {
+  font-family: var(--mono);
+  font-size: 28px; font-weight: 700;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+header p {
+  color: var(--text2); font-size: 14px; margin-top: 8px;
+  font-weight: 300;
+}
+.controls {
+  display: flex; gap: 12px; margin-bottom: 24px;
+  flex-wrap: wrap; align-items: center;
+}
+.search-box {
+  flex: 1; min-width: 250px; position: relative;
+}
+.search-box input {
+  width: 100%; padding: 12px 16px 12px 42px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-size: 14px;
+  font-family: var(--sans); outline: none;
+  transition: border-color 0.2s;
+}
+.search-box input:focus { border-color: var(--accent); }
+.search-box::before {
+  content: '⌕'; position: absolute; left: 14px; top: 50%;
+  transform: translateY(-50%); color: var(--text2); font-size: 18px;
+}
+.filter-tabs {
+  display: flex; gap: 4px; flex-wrap: wrap;
+}
+.filter-btn {
+  padding: 8px 14px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text2); font-size: 12px; cursor: pointer;
+  font-family: var(--mono); font-weight: 400;
+  transition: all 0.15s; text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.filter-btn:hover { border-color: var(--accent); color: var(--text); }
+.filter-btn.active {
+  background: var(--accent); border-color: var(--accent);
+  color: #fff;
+}
+.stats {
+  display: flex; gap: 20px; margin-bottom: 20px;
+  font-family: var(--mono); font-size: 12px; color: var(--text2);
+}
+.stats span { color: var(--accent); font-weight: 700; }
+.section-header {
+  font-family: var(--mono); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 2px;
+  color: var(--accent2); padding: 16px 0 8px;
+  border-top: 1px solid var(--border); margin-top: 8px;
+}
+.section-header:first-of-type { border-top: none; margin-top: 0; }
+table {
+  width: 100%; border-collapse: collapse;
+  margin-bottom: 12px;
+}
+th {
+  text-align: left; padding: 10px 12px;
+  font-family: var(--mono); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 1px;
+  color: var(--text2); border-bottom: 2px solid var(--border);
+  position: sticky; top: 0; background: var(--bg);
+  z-index: 2;
+}
+td {
+  padding: 8px 12px; border-bottom: 1px solid rgba(38,48,80,0.5);
+  font-size: 14px; vertical-align: middle;
+}
+tr:hover td { background: rgba(78,168,255,0.04); }
+.afsc-code {
+  font-family: var(--mono); font-weight: 700;
+  color: #fff; font-size: 13px;
+  white-space: nowrap;
+}
+.career-group {
+  font-size: 11px; color: var(--text2);
+  font-family: var(--mono);
+}
+.dl-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 5px;
+  text-decoration: none; font-size: 12px;
+  font-family: var(--mono); font-weight: 400;
+  transition: all 0.15s; white-space: nowrap;
+}
+.dl-btn.direct {
+  background: rgba(78,168,255,0.12); border: 1px solid rgba(78,168,255,0.3);
+  color: var(--accent);
+}
+.dl-btn.direct:hover {
+  background: rgba(78,168,255,0.25); border-color: var(--accent);
+  transform: translateY(-1px);
+}
+.dl-btn.search {
+  background: rgba(255,140,66,0.1); border: 1px solid rgba(255,140,66,0.25);
+  color: var(--accent3);
+}
+.dl-btn.search:hover {
+  background: rgba(255,140,66,0.2); border-color: var(--accent3);
+  transform: translateY(-1px);
+}
+.dl-icon { font-size: 14px; }
+.type-badge {
+  display: inline-block; padding: 2px 6px; border-radius: 3px;
+  font-size: 10px; font-family: var(--mono); font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.type-badge.enlisted { background: rgba(45,212,168,0.15); color: var(--accent2); }
+.type-badge.officer { background: rgba(78,168,255,0.15); color: var(--accent); }
+.legend {
+  display: flex; gap: 24px; margin-bottom: 20px;
+  padding: 12px 16px; background: var(--surface);
+  border-radius: 8px; border: 1px solid var(--border);
+  font-size: 12px; flex-wrap: wrap;
+}
+.legend-item { display: flex; align-items: center; gap: 8px; }
+.no-results {
+  text-align: center; padding: 60px 20px;
+  color: var(--text2); font-size: 16px;
+}
+@media (max-width: 600px) {
+  .container { padding: 12px; }
+  header h1 { font-size: 20px; }
+  th:nth-child(3), td:nth-child(3) { display: none; }
+  .controls { flex-direction: column; }
+  .stats { flex-wrap: wrap; gap: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="noise"></div>
+<div class="container">
+  <header>
+    <h1>AFSC CFETP Download Hub</h1>
+    <p>All Air Force Specialty Codes with Career Field Education & Training Plan links &bull; No shred-outs</p>
+  </header>
+
+  <div class="legend">
+    <div class="legend-item">
+      <a class="dl-btn direct" style="pointer-events:none">↓ PDF</a>
+      <span style="color:var(--text2)">Direct download from e-Publishing</span>
+    </div>
+    <div class="legend-item">
+      <a class="dl-btn search" style="pointer-events:none">⌕ Search</a>
+      <span style="color:var(--text2)">Google search — click top result to download</span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="search-box">
+      <input type="text" id="search" placeholder="Search AFSC, title, or career group...">
+    </div>
+    <div class="filter-tabs">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="enlisted">Enlisted</button>
+      <button class="filter-btn" data-filter="officer">Officer</button>
+      <button class="filter-btn" data-filter="direct">Direct PDF Only</button>
+    </div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+  <div id="table-container"></div>
+</div>
+
+<script>
+const B = "https://static.e-publishing.af.mil/production/1";
+const G = (q) => `https://www.google.com/search?q=${encodeURIComponent("site:static.e-publishing.af.mil cfetp " + q)}`;
+
+const data = [
+// ENLISTED
+{a:"1A1X2",t:"Mobility Force Aviator",g:"Operations",ty:"E",u:`${B}/af_a3/publication/cfetp1a1xx/cfetp1a1xx.pdf`},
+{a:"1A1X3",t:"Special Mission Aviator",g:"Operations",ty:"E",u:`${B}/af_a3/publication/cfetp1a1xx/cfetp1a1xx.pdf`},
+{a:"1A1X4",t:"Multi-Domain Operations Aviator",g:"Operations",ty:"E",u:`${B}/af_a3/publication/cfetp1a1xx/cfetp1a1xx.pdf`},
+{a:"1A1X8",t:"Executive Mission Aviator",g:"Operations",ty:"E",u:`${B}/af_a3/publication/cfetp1a1xx/cfetp1a1xx.pdf`},
+{a:"1A3X1",t:"Airborne Mission Systems Specialist",g:"Operations",ty:"E",u:`${B}/af_a3/publication/cfetp1a1xx/cfetp1a1xx.pdf`},
+{a:"1A8X1",t:"Airborne Cryptologic Language Analyst",g:"Operations",ty:"E",u:G("1a8x1")},
+{a:"1A8X2",t:"Airborne ISR Operator",g:"Operations",ty:"E",u:G("1a8x2")},
+{a:"1B4X1",t:"Cyber Warfare Operations",g:"Operations",ty:"E",u:`${B}/af_a2_6/publication/cfetp1b4x1/cfetp1b4x1.pdf`},
+{a:"1C0X2",t:"Aviation Resource Management",g:"Operations",ty:"E",u:`${B}/af_a3/publication/cfetp1c0x2/cfetpc0x2.pdf`},
+{a:"1C1X1",t:"Air Traffic Control",g:"Operations",ty:"E",u:`${B}/af_a3/publication/cfetp1c1x1/cfetp1c1x1.pdf`},
+{a:"1C3X1",t:"All-Domain Command & Control Ops",g:"Operations",ty:"E",u:`${B}/af_a3/publication/cfetp1c3x1/cfetp1c3x1.pdf`},
+{a:"1C5X1",t:"Battle Management Operations",g:"Operations",ty:"E",u:`${B}/af_a3/publication/cfetp1c5x1/cfetp1c5x1.pdf`},
+{a:"1C6X1",t:"Space Systems Operations",g:"Operations",ty:"E",u:G("1c6x1")},
+{a:"1C7X1",t:"Airfield Management",g:"Operations",ty:"E",u:G("1c7x1")},
+{a:"1C8X3",t:"Radar, Airfield & Weather Systems",g:"Operations",ty:"E",u:G("1c8x3")},
+{a:"1D7X1",t:"Information Technology Systems",g:"Operations",ty:"E",u:`${B}/af_a2_6/publication/cfetp1d7xx/cfetp1d7xx.pdf`},
+{a:"1D7X2",t:"RF Transmissions & EM Activities",g:"Operations",ty:"E",u:`${B}/af_a2_6/publication/cfetp1d7xx/cfetp1d7xx.pdf`},
+{a:"1D7X3",t:"Cable and Antenna",g:"Operations",ty:"E",u:`${B}/af_a2_6/publication/cfetp1d7xx/cfetp1d7xx.pdf`},
+{a:"1D7X4",t:"Data Engineering",g:"Operations",ty:"E",u:`${B}/af_a2_6/publication/cfetp1d7xx/cfetp1d7xx.pdf`},
+{a:"1D7X5",t:"Cybersecurity",g:"Operations",ty:"E",u:`${B}/af_a2_6/publication/cfetp1d7xx/cfetp1d7xx.pdf`},
+{a:"1H0X1",t:"Aerospace Physiology",g:"Operations",ty:"E",u:G("1h0x1")},
+{a:"1N0X1",t:"All Source Intelligence Analyst",g:"Operations",ty:"E",u:`${B}/af_a2_6/publication/cfetp1n0x1/cfetp1n0x1.pdf`},
+{a:"1N1X1",t:"Geospatial Intelligence",g:"Operations",ty:"E",u:`${B}/af_a2_6/publication/cfetp1n1x1xa/cfetp1n1x1xa.pdf`},
+{a:"1N2X1",t:"Signals Intelligence",g:"Operations",ty:"E",u:G("1n2x1")},
+{a:"1N3X1",t:"Cryptologic Language Analyst",g:"Operations",ty:"E",u:G("1n3x1")},
+{a:"1N4X1",t:"Cyber Intelligence",g:"Operations",ty:"E",u:G("1n4x1")},
+{a:"1N4X2",t:"Cryptologic Analyst & Reporter",g:"Operations",ty:"E",u:G("1n4x2")},
+{a:"1N7X1",t:"Human Intelligence Specialist",g:"Operations",ty:"E",u:G("1n7x1")},
+{a:"1N8X1",t:"Targeting Analyst",g:"Operations",ty:"E",u:G("1n8x1")},
+{a:"1P0X1",t:"Aircrew Flight Equipment",g:"Operations",ty:"E",u:`${B}/af_a3/publication/cfetp1p0x1/cfetp1p0x1.pdf`},
+{a:"1S0X1",t:"Safety",g:"Operations",ty:"E",u:G("1s0x1")},
+{a:"1T0X1",t:"SERE Specialist",g:"Operations",ty:"E",u:G("1t0x1")},
+{a:"1U1X1",t:"RPA Sensor Operator",g:"Operations",ty:"E",u:G("1u1x1")},
+{a:"1W0X1",t:"Weather",g:"Operations",ty:"E",u:`${B}/af_a3/publication/cfetp1w0x1/cfetp1w0x1.pdf`},
+{a:"1Z1X1",t:"Pararescue",g:"Operations",ty:"E",u:G("1z1x1")},
+{a:"1Z2X1",t:"Combat Control",g:"Operations",ty:"E",u:G("1z2x1")},
+{a:"1Z3X1",t:"TACP",g:"Operations",ty:"E",u:G("1z3x1")},
+{a:"1Z4X1",t:"Special Reconnaissance",g:"Operations",ty:"E",u:G("1z4x1")},
+{a:"2A0X1",t:"Avionics Test Station & Components",g:"Logistics & Mx",ty:"E",u:`${B}/af_a4/publication/cfetp2a0x1/cfetp2a0x1.pdf`},
+{a:"2A2X1",t:"MHU-139 Electrical/Env/Avionics",g:"Logistics & Mx",ty:"E",u:`${B}/af_a4/publication/cfetp2a2x1/cfetp2a2x1.pdf`},
+{a:"2A3X3",t:"Tactical Aircraft Maintenance",g:"Logistics & Mx",ty:"E",u:`${B}/af_a4/publication/cfetp2a3x3/cfetp2a3x3.pdf`},
+{a:"2A3X4",t:"Fighter Aircraft Integrated Avionics",g:"Logistics & Mx",ty:"E",u:`${B}/af_a4/publication/cfetp2a3x4/cfetp2a3x4.pdf`},
+{a:"2A3X5",t:"Adv Fighter Aircraft Integrated Avionics",g:"Logistics & Mx",ty:"E",u:`${B}/af_a4/publication/cfetp2a3x5/cfetp2a3x5.pdf`},
+{a:"2A3X7",t:"Tactical Aircraft Mx (5th Gen)",g:"Logistics & Mx",ty:"E",u:`${B}/af_a4/publication/cfetp2a3x7/cfetp2a3x7.pdf`},
+{a:"2A3X8",t:"Remotely Piloted Aircraft Mx",g:"Logistics & Mx",ty:"E",u:G("2a3x8")},
+{a:"2A5X1",t:"Airlift/Special Mission Aircraft Mx",g:"Logistics & Mx",ty:"E",u:`${B}/af_a4/publication/cfetp2a5x1/cfetp2a5x1.pdf`},
+{a:"2A5X2",t:"Helicopter/Tiltrotor Aircraft Mx",g:"Logistics & Mx",ty:"E",u:`${B}/af_a4/publication/cfetp2a5x2/cfetp2a5x2.pdf`},
+{a:"2A5X4",t:"Refuel/Bomber Aircraft Mx",g:"Logistics & Mx",ty:"E",u:`${B}/af_a4/publication/cfetp2a5x4/cfetp2a5x4.pdf`},
+{a:"2A6X1",t:"Aerospace Propulsion",g:"Logistics & Mx",ty:"E",u:`${B}/af_a4/publication/cfetp2a6x1/cfetp2a6x1.pdf`},
+{a:"2A6X2",t:"Aerospace Ground Equipment (AGE)",g:"Logistics & Mx",ty:"E",u:`${B}/af_a4/publication/cfetp2a6x2/cfetp2a6x2.pdf`},
+{a:"2A6X3",t:"Aircrew Egress Systems",g:"Logistics & Mx",ty:"E",u:`${B}/af_a4/publication/cfetp2a6x3/cfetp2a6x3.pdf`},
+{a:"2A6X4",t:"Aircraft Fuel Systems",g:"Logistics & Mx",ty:"E",u:`${B}/af_a4/publication/cfetp2a6x4/cfetp2a6x4.pdf`},
+{a:"2A6X5",t:"Aircraft Hydraulic Systems",g:"Logistics & Mx",ty:"E",u:`${B}/af_a4/publication/cfetp2a6x5/cfetp2a6x5.pdf`},
+{a:"2A6X6",t:"Aircraft Electrical & Env Systems",g:"Logistics & Mx",ty:"E",u:`${B}/af_a4/publication/cfetp2a6x6/cfetp2a6x6.pdf`},
+{a:"2A7X1",t:"Aircraft Metals Technology",g:"Logistics & Mx",ty:"E",u:`${B}/af_a4/publication/cfetp2a7x1/cfetp2a7x1.pdf`},
+{a:"2A7X2",t:"Nondestructive Inspection",g:"Logistics & Mx",ty:"E",u:`${B}/af_a4/publication/cfetp2a7x2/cfetp2a7x2.pdf`},
+{a:"2A7X3",t:"Aircraft Structural Maintenance",g:"Logistics & Mx",ty:"E",u:`${B}/af_a4/publication/cfetp2a7x3/cfetp2a7x3.pdf`},
+{a:"2A7X5",t:"Low Observable Aircraft Structural Mx",g:"Logistics & Mx",ty:"E",u:`${B}/af_a4/publication/cfetp2a7x5/cfetp2a7x5.pdf`},
+{a:"2A9X4",t:"Heavy Aircraft Integrated Avionics",g:"Logistics & Mx",ty:"E",u:`${B}/af_a4/publication/cfetp2a9x4/cfetp2a9x4.pdf`},
+{a:"2F0X1",t:"Fuels",g:"Logistics & Mx",ty:"E",u:`${B}/af_a4/publication/cfetp2f0x1/cfetp2f0x1.pdf`},
+{a:"2G0X1",t:"Logistics Plans",g:"Logistics & Mx",ty:"E",u:`${B}/af_a4/publication/cfetp2g0x1/cfetp2g0x1.pdf`},
+{a:"2M0X1",t:"Missile & Space Sys Electronic Mx",g:"Logistics & Mx",ty:"E",u:G("2m0x1")},
+{a:"2M0X2",t:"Missile & Space Systems Mx",g:"Logistics & Mx",ty:"E",u:G("2m0x2")},
+{a:"2M0X3",t:"Missile & Space Facilities",g:"Logistics & Mx",ty:"E",u:G("2m0x3")},
+{a:"2P0X1",t:"Precision Measurement Equip Lab",g:"Logistics & Mx",ty:"E",u:G("2p0x1")},
+{a:"2R2X1",t:"Maintenance Management",g:"Logistics & Mx",ty:"E",u:G("2r2x1")},
+{a:"2S0X1",t:"Material Management",g:"Logistics & Mx",ty:"E",u:`${B}/af_a4/publication/cfetp2s0xx/cfetp2s0xx.pdf`},
+{a:"2T0X1",t:"Traffic Management",g:"Logistics & Mx",ty:"E",u:`${B}/af_a4/publication/cfetp2t0x1/cfetp2t0x1.pdf`},
+{a:"2T1X1",t:"Ground Transportation",g:"Logistics & Mx",ty:"E",u:G("2t1x1")},
+{a:"2T2X1",t:"Air Transportation",g:"Logistics & Mx",ty:"E",u:`${B}/af_a4/publication/cfetp2t2x1/cfetp2t2x1.pdf`},
+{a:"2T3X1",t:"Mission Gen Vehicular Equip Mx",g:"Logistics & Mx",ty:"E",u:`${B}/af_a4/publication/cfetp2t3x1/cfetp2t3x1.pdf`},
+{a:"2T3X7",t:"Fleet Management and Analysis",g:"Logistics & Mx",ty:"E",u:G("2t3x7")},
+{a:"2W0X1",t:"Munitions Systems",g:"Logistics & Mx",ty:"E",u:G("2w0x1")},
+{a:"2W1X1",t:"Aircraft Armament Systems",g:"Logistics & Mx",ty:"E",u:`${B}/af_a4/publication/cfetp2w1x1/cfetp2w1x1.pdf`},
+{a:"2W2X1",t:"Nuclear Weapons",g:"Logistics & Mx",ty:"E",u:G("2w2x1")},
+{a:"3E0X1",t:"Electrical Systems",g:"Support",ty:"E",u:`${B}/af_a4/publication/cfetp3e0x1/cfetp3e0x1.pdf`},
+{a:"3E0X2",t:"Electrical Power Production",g:"Support",ty:"E",u:`${B}/af_a4/publication/cfetp3e0x2/cfetp3e0x2.pdf`},
+{a:"3E1X1",t:"HVAC & Refrigeration",g:"Support",ty:"E",u:`${B}/af_a4/publication/cfetp3e1x1/cfetp3e1x1.pdf`},
+{a:"3E2X1",t:"Pavements & Construction Equip",g:"Support",ty:"E",u:`${B}/af_a4/publication/cfetp3e2x1/cfetp3e2x1.pdf`},
+{a:"3E3X1",t:"Structural",g:"Support",ty:"E",u:`${B}/af_a4/publication/cfetp3e3x1/cfetp3e3x1.pdf`},
+{a:"3E4X1",t:"Water & Fuel Systems Mx",g:"Support",ty:"E",u:`${B}/af_a4/publication/cfetp3e4x1/cfetp3e4x1.pdf`},
+{a:"3E4X3",t:"Pest Management",g:"Support",ty:"E",u:`${B}/af_a4/publication/cfetp3e4x3/cfetp3e4x3.pdf`},
+{a:"3E5X1",t:"Engineering",g:"Support",ty:"E",u:`${B}/af_a4/publication/cfetp3e5x1/cfetp3e5x1.pdf`},
+{a:"3E6X1",t:"Operations Management",g:"Support",ty:"E",u:`${B}/af_a4/publication/cfetp3e6x1/cfetp3e6x1.pdf`},
+{a:"3E7X1",t:"Fire Protection",g:"Support",ty:"E",u:`${B}/af_a4/publication/cfetp3e7x1/cfetp3e7x1.pdf`},
+{a:"3E8X1",t:"Explosive Ordnance Disposal (EOD)",g:"Support",ty:"E",u:`${B}/af_a4/publication/cfetp3e8x1/cfetp3e8x1.pdf`},
+{a:"3E9X1",t:"Emergency Management",g:"Support",ty:"E",u:`${B}/af_a4/publication/cfetp3e9x1/cfetp3e9x1.pdf`},
+{a:"3F0X1",t:"Personnel",g:"Support",ty:"E",u:`${B}/af_a1/publication/cfetp3f0x1/cfetp3f0x1.pdf`},
+{a:"3F1X1",t:"Services",g:"Support",ty:"E",u:`${B}/af_a1/publication/cfetp3f1x1/cfetp3f1x1.pdf`},
+{a:"3F2X1",t:"Education & Training",g:"Support",ty:"E",u:`${B}/af_a1/publication/cfetp3f2x1/cfetp3f2x1.pdf`},
+{a:"3F3X1",t:"Manpower",g:"Support",ty:"E",u:`${B}/af_a1/publication/cfetp3f3x1/cfetp3f3x1.pdf`},
+{a:"3F4X1",t:"Equal Opportunity",g:"Support",ty:"E",u:`${B}/af_a1/publication/cfetp3f4x1/cfetp3f4x1.pdf`},
+{a:"3F5X1",t:"Administration",g:"Support",ty:"E",u:`${B}/af_a1/publication/cfetp3f5x1/cfetp3f5x1.pdf`},
+{a:"3G0X1",t:"Talent Acquisition",g:"Support",ty:"E",u:G("3g0x1")},
+{a:"3H0X1",t:"Historian",g:"Support",ty:"E",u:G("3h0x1")},
+{a:"3N0X6",t:"Public Affairs",g:"Support",ty:"E",u:`${B}/saf_pa/publication/cfetp3n0xx/cfetp3n0xx.pdf`},
+{a:"3N1X1",t:"Regional Band",g:"Support",ty:"E",u:G("3n1x1")},
+{a:"3N2X1",t:"Premier Band (USAF Band)",g:"Support",ty:"E",u:G("3n2x1")},
+{a:"3N3X1",t:"Premier Band (USAFA Band)",g:"Support",ty:"E",u:G("3n3x1")},
+{a:"3P0X1",t:"Security Forces",g:"Support",ty:"E",u:`${B}/af_a4/publication/cfetp3p0x1ab/cfetp3p0x1ab.pdf`},
+{a:"4A0X1",t:"Health Services Management",g:"Medical",ty:"E",u:`${B}/af_sg/publication/cfetp4a0x1/cfetp4a0x1.pdf`},
+{a:"4A1X1",t:"Medical Material",g:"Medical",ty:"E",u:`${B}/af_sg/publication/cfetp4a1x1/cfetp4a1x1.pdf`},
+{a:"4A2X1",t:"Biomedical Equipment",g:"Medical",ty:"E",u:`${B}/af_sg/publication/cfetp4a2x1/cfetp4a2x1.pdf`},
+{a:"4B0X1",t:"Bioenvironmental Engineering",g:"Medical",ty:"E",u:`${B}/af_sg/publication/cfetp4b0x1/cfetp4b0x1.pdf`},
+{a:"4C0X1",t:"Mental Health Service",g:"Medical",ty:"E",u:`${B}/af_sg/publication/cfetp4c0x1/cfetp4c0x1.pdf`},
+{a:"4D0X1",t:"Diet Therapy",g:"Medical",ty:"E",u:`${B}/af_sg/publication/cfetp4d0x1/cfetp4d0x1.pdf`},
+{a:"4E0X1",t:"Public Health",g:"Medical",ty:"E",u:`${B}/af_sg/publication/cfetp4e0x1/cfetp4e0x1.pdf`},
+{a:"4H0X1",t:"Respiratory Care Practitioner",g:"Medical",ty:"E",u:`${B}/af_sg/publication/cfetp4h0x1/cfetp4h0x1.pdf`},
+{a:"4J0X2",t:"Physical Medicine",g:"Medical",ty:"E",u:`${B}/af_sg/publication/cfetp4j0x2/cfetp4j0x2.pdf`},
+{a:"4N0X1",t:"Aerospace Medical Service",g:"Medical",ty:"E",u:`${B}/af_sg/publication/cfetp4n0x1/cfetp4n0x1.pdf`},
+{a:"4N1X1",t:"Surgical Technologist",g:"Medical",ty:"E",u:`${B}/af_sg/publication/cfetp4n1x1/cfetp4n1x1.pdf`},
+{a:"4P0X1",t:"Pharmacy",g:"Medical",ty:"E",u:`${B}/af_sg/publication/cfetp4p0x1/cfetp4p0x1.pdf`},
+{a:"4R0X1",t:"Diagnostic Imaging",g:"Medical",ty:"E",u:`${B}/af_sg/publication/cfetp4r0x1/cfetp4r0x1.pdf`},
+{a:"4T0X1",t:"Medical Laboratory",g:"Medical",ty:"E",u:`${B}/af_sg/publication/cfetp4t0x1/cfetp4t0x1.pdf`},
+{a:"4T0X2",t:"Histopathology",g:"Medical",ty:"E",u:`${B}/af_sg/publication/cfetp4t0x2/cfetp4t0x2.pdf`},
+{a:"4V0X1",t:"Ophthalmic",g:"Medical",ty:"E",u:`${B}/af_sg/publication/cfetp4v0x1/cfetp4v0x1.pdf`},
+{a:"4Y0X1",t:"Dental Assistant",g:"Medical",ty:"E",u:`${B}/af_sg/publication/cfetp4y0x1/cfetp4y0x1.pdf`},
+{a:"4Y0X2",t:"Dental Laboratory",g:"Medical",ty:"E",u:`${B}/af_sg/publication/cfetp4y0x2/cfetp4y0x2.pdf`},
+{a:"5J0X1",t:"Paralegal",g:"Professional",ty:"E",u:`${B}/af_ja/publication/cfetp5j0x1/cfetp5j0x1.pdf`},
+{a:"5R0X1",t:"Religious Affairs",g:"Professional",ty:"E",u:`${B}/af_hc/publication/cfetp5r0x1/cfetp5r0x1.pdf`},
+{a:"6C0X1",t:"Contracting",g:"Acq & Financial",ty:"E",u:`${B}/saf_aq/publication/cfetp6c0x1/cfetp6c0x1.pdf`},
+{a:"6F0X1",t:"Financial Mgmt & Comptroller",g:"Acq & Financial",ty:"E",u:`${B}/saf_fm/publication/cfetp6f0x1/cfetp6f0x1.pdf`},
+{a:"7S0X1",t:"Special Investigations (OSI)",g:"Special Investigations",ty:"E",u:G("7s0x1")},
+{a:"9S100",t:"Scientific Applications Specialist",g:"Reporting Identifier",ty:"E",u:G("9s100")},
+// OFFICER
+{a:"13MX",t:"Airfield Operations",g:"Operations",ty:"O",u:`${B}/af_a3/publication/cfetp13mx/cfetp13mx.pdf`},
+{a:"21AX",t:"Aircraft Maintenance",g:"Logistics",ty:"O",u:`${B}/af_a4/publication/cfetp21ax/cfetp21ax.pdf`},
+{a:"21MX",t:"Munitions & Missile Mx",g:"Logistics",ty:"O",u:`${B}/af_a4/publication/cfetp21mx/cfetp21mx.pdf`},
+{a:"43EX",t:"Bioenvironmental Engineer",g:"Medical",ty:"O",u:`${B}/af_sg/publication/cfetp43exx/cfetp43exx.pdf`},
+{a:"11BX",t:"Bomber Pilot",g:"Operations",ty:"O",u:G("cfetp 11")},
+{a:"11EX",t:"Experimental Test Pilot",g:"Operations",ty:"O",u:G("cfetp 11")},
+{a:"11FX",t:"Fighter Pilot",g:"Operations",ty:"O",u:G("cfetp 11")},
+{a:"11GX",t:"Generalist Pilot",g:"Operations",ty:"O",u:G("cfetp 11")},
+{a:"11HX",t:"Rescue Pilot",g:"Operations",ty:"O",u:G("cfetp 11")},
+{a:"11KX",t:"Trainer Pilot",g:"Operations",ty:"O",u:G("cfetp 11")},
+{a:"11MX",t:"Mobility Pilot",g:"Operations",ty:"O",u:G("cfetp 11")},
+{a:"11RX",t:"Recon/Surveillance/EW Pilot",g:"Operations",ty:"O",u:G("cfetp 11")},
+{a:"11SX",t:"Special Operations Pilot",g:"Operations",ty:"O",u:G("cfetp 11")},
+{a:"11TX",t:"Student Pilot",g:"Operations",ty:"O",u:G("cfetp 11")},
+{a:"11UX",t:"RPA Pilot",g:"Operations",ty:"O",u:G("cfetp 11")},
+{a:"12BX",t:"Bomber CSO",g:"Operations",ty:"O",u:G("cfetp 12")},
+{a:"12EX",t:"Experimental Test CSO",g:"Operations",ty:"O",u:G("cfetp 12")},
+{a:"12FX",t:"Fighter WSO",g:"Operations",ty:"O",u:G("cfetp 12")},
+{a:"12GX",t:"Generalist CSO",g:"Operations",ty:"O",u:G("cfetp 12")},
+{a:"12HX",t:"Rescue CSO",g:"Operations",ty:"O",u:G("cfetp 12")},
+{a:"12KX",t:"Trainer CSO",g:"Operations",ty:"O",u:G("cfetp 12")},
+{a:"12MX",t:"Mobility CSO",g:"Operations",ty:"O",u:G("cfetp 12")},
+{a:"12RX",t:"Recon/Surveillance/EW CSO",g:"Operations",ty:"O",u:G("cfetp 12")},
+{a:"12SX",t:"Special Operations CSO",g:"Operations",ty:"O",u:G("cfetp 12")},
+{a:"12UX",t:"RPA CSO",g:"Operations",ty:"O",u:G("cfetp 12")},
+{a:"10C0",t:"Operations Commander",g:"Operations",ty:"O",u:G("10c0")},
+{a:"13AX",t:"Astronaut",g:"Operations",ty:"O",u:G("13ax")},
+{a:"13BX",t:"Air Battle Manager",g:"Operations",ty:"O",u:G("13bx")},
+{a:"13HX",t:"Aerospace Physiologist",g:"Operations",ty:"O",u:G("13hx")},
+{a:"13NX",t:"Nuclear & Missile Operations",g:"Operations",ty:"O",u:G("13nx")},
+{a:"13OX",t:"Multi-Domain Warfare Officer",g:"Operations",ty:"O",u:G("13ox")},
+{a:"13SX",t:"Space Operations",g:"Operations",ty:"O",u:G("13sx")},
+{a:"13ZX",t:"Rated Multi-Domain Warfare Officer",g:"Operations",ty:"O",u:G("13zx")},
+{a:"14FX",t:"Information Operations",g:"Operations",ty:"O",u:G("14fx")},
+{a:"14NX",t:"Intelligence",g:"Operations",ty:"O",u:G("14nx")},
+{a:"15AX",t:"Operations Analysis",g:"Operations",ty:"O",u:G("15ax")},
+{a:"15WX",t:"Weather & Environmental Sciences",g:"Operations",ty:"O",u:G("15wx")},
+{a:"16FX",t:"Foreign Area Officer",g:"Operations",ty:"O",u:G("16fx")},
+{a:"16GX",t:"AF Operations Staff Officer",g:"Operations",ty:"O",u:G("16gx")},
+{a:"16KX",t:"Software Development Officer",g:"Operations",ty:"O",u:G("16kx")},
+{a:"16PX",t:"Political-Military Affairs Strategist",g:"Operations",ty:"O",u:G("16px")},
+{a:"16RX",t:"Planning & Programming",g:"Operations",ty:"O",u:G("16rx")},
+{a:"16ZX",t:"Rated Foreign Area Officer",g:"Operations",ty:"O",u:G("16zx")},
+{a:"17CX",t:"Cyberspace Warfare Ops Cmdr",g:"Operations",ty:"O",u:G("17cx")},
+{a:"17DX",t:"Warfighter Comms Ops",g:"Operations",ty:"O",u:G("17dx")},
+{a:"17SX",t:"Cyberspace Effects Ops",g:"Operations",ty:"O",u:G("17sx")},
+{a:"17WX",t:"Warfighter Comm & IT Sys Ops",g:"Operations",ty:"O",u:G("17wx")},
+{a:"17YX",t:"Cyber Effects & Warfare",g:"Operations",ty:"O",u:G("17yx")},
+{a:"18AX",t:"Attack RPA Pilot",g:"Operations",ty:"O",u:G("cfetp 18")},
+{a:"18EX",t:"Experimental Test RPA Pilot",g:"Operations",ty:"O",u:G("cfetp 18")},
+{a:"18GX",t:"Generalist RPA Pilot",g:"Operations",ty:"O",u:G("cfetp 18")},
+{a:"18RX",t:"Recon RPA Pilot",g:"Operations",ty:"O",u:G("cfetp 18")},
+{a:"18SX",t:"Special Ops RPA Pilot",g:"Operations",ty:"O",u:G("cfetp 18")},
+{a:"19ZX",t:"Special Warfare",g:"Operations",ty:"O",u:G("19zx")},
+{a:"20C0",t:"Logistics Commander",g:"Logistics",ty:"O",u:G("20c0")},
+{a:"21RX",t:"Logistics Readiness",g:"Logistics",ty:"O",u:G("21rx")},
+{a:"30C0",t:"Support Commander",g:"Support",ty:"O",u:G("30c0")},
+{a:"31PX",t:"Security Forces",g:"Support",ty:"O",u:G("31px")},
+{a:"32EX",t:"Civil Engineer",g:"Support",ty:"O",u:G("32ex")},
+{a:"35PX",t:"Public Affairs",g:"Support",ty:"O",u:G("35px")},
+{a:"36PX",t:"Personnel",g:"Support",ty:"O",u:G("36px")},
+{a:"38FX",t:"Force Support",g:"Support",ty:"O",u:G("38fx")},
+{a:"40C0",t:"Medical Commander",g:"Medical",ty:"O",u:G("40c0")},
+{a:"41AX",t:"Health Services Administrator",g:"Medical",ty:"O",u:G("41ax")},
+{a:"42BX",t:"Physical Therapist",g:"Medical",ty:"O",u:G("42bx")},
+{a:"42EX",t:"Optometrist",g:"Medical",ty:"O",u:G("42ex")},
+{a:"42GX",t:"Physician Assistant",g:"Medical",ty:"O",u:G("42gx")},
+{a:"42NX",t:"Audiologist/Speech Pathologist",g:"Medical",ty:"O",u:G("42nx")},
+{a:"42PX",t:"Clinical Psychologist",g:"Medical",ty:"O",u:G("42px")},
+{a:"42SX",t:"Clinical Social Worker",g:"Medical",ty:"O",u:G("42sx")},
+{a:"42TX",t:"Occupational Therapist",g:"Medical",ty:"O",u:G("42tx")},
+{a:"43AX",t:"Aero & Operational Physiologist",g:"Medical",ty:"O",u:G("43ax")},
+{a:"43BX",t:"Biomedical Scientist",g:"Medical",ty:"O",u:G("43bx")},
+{a:"43DX",t:"Dietitian",g:"Medical",ty:"O",u:G("43dx")},
+{a:"43HX",t:"Public Health Officer",g:"Medical",ty:"O",u:G("43hx")},
+{a:"43MX",t:"Health Physicist",g:"Medical",ty:"O",u:G("43mx")},
+{a:"43PX",t:"Pharmacist",g:"Medical",ty:"O",u:G("43px")},
+{a:"43TX",t:"Biomedical Laboratory Officer",g:"Medical",ty:"O",u:G("43tx")},
+{a:"43YX",t:"Medical Entomologist",g:"Medical",ty:"O",u:G("43yx")},
+{a:"44AX",t:"Ambulatory/Family Physician",g:"Medical",ty:"O",u:G("44ax")},
+{a:"44BX",t:"Preventive Medicine",g:"Medical",ty:"O",u:G("44bx")},
+{a:"44DX",t:"Diagnostic Radiologist",g:"Medical",ty:"O",u:G("44dx")},
+{a:"44EX",t:"Emergency Medicine",g:"Medical",ty:"O",u:G("44ex")},
+{a:"44FX",t:"Family Physician",g:"Medical",ty:"O",u:G("44fx")},
+{a:"44GX",t:"General Practice Physician",g:"Medical",ty:"O",u:G("44gx")},
+{a:"44HX",t:"Nuclear Medicine Physician",g:"Medical",ty:"O",u:G("44hx")},
+{a:"44KX",t:"Pediatrician",g:"Medical",ty:"O",u:G("44kx")},
+{a:"44MX",t:"Internist",g:"Medical",ty:"O",u:G("44mx")},
+{a:"44NX",t:"Neurologist",g:"Medical",ty:"O",u:G("44nx")},
+{a:"44PX",t:"Psychiatrist",g:"Medical",ty:"O",u:G("44px")},
+{a:"44SX",t:"Dermatologist",g:"Medical",ty:"O",u:G("44sx")},
+{a:"44TX",t:"Pathologist",g:"Medical",ty:"O",u:G("44tx")},
+{a:"44UX",t:"Occupational Medicine",g:"Medical",ty:"O",u:G("44ux")},
+{a:"44YX",t:"Critical Care Medicine",g:"Medical",ty:"O",u:G("44yx")},
+{a:"45AX",t:"Anesthesiologist",g:"Medical",ty:"O",u:G("45ax")},
+{a:"45BX",t:"Orthopedic Surgeon",g:"Medical",ty:"O",u:G("45bx")},
+{a:"45EX",t:"Ophthalmologist",g:"Medical",ty:"O",u:G("45ex")},
+{a:"45GX",t:"OB/GYN",g:"Medical",ty:"O",u:G("45gx")},
+{a:"45NX",t:"Otorhinolaryngologist (ENT)",g:"Medical",ty:"O",u:G("45nx")},
+{a:"45SX",t:"Surgeon (General Surgery)",g:"Medical",ty:"O",u:G("45sx")},
+{a:"45UX",t:"Urologist",g:"Medical",ty:"O",u:G("45ux")},
+{a:"46AX",t:"Nursing Administrator",g:"Medical",ty:"O",u:G("46ax")},
+{a:"46FX",t:"Flight Nurse",g:"Medical",ty:"O",u:G("46fx")},
+{a:"46MX",t:"Nurse Midwife",g:"Medical",ty:"O",u:G("46mx")},
+{a:"46NX",t:"Clinical Nurse",g:"Medical",ty:"O",u:G("46nx")},
+{a:"46PX",t:"Mental Health Nurse",g:"Medical",ty:"O",u:G("46px")},
+{a:"46SX",t:"Operating Room Nurse",g:"Medical",ty:"O",u:G("46sx")},
+{a:"46YX",t:"Adv Practice Registered Nurse",g:"Medical",ty:"O",u:G("46yx")},
+{a:"47BX",t:"Orthodontist",g:"Medical",ty:"O",u:G("47bx")},
+{a:"47DX",t:"Oral & Maxillofacial Surgeon",g:"Medical",ty:"O",u:G("47dx")},
+{a:"47EX",t:"Endodontist",g:"Medical",ty:"O",u:G("47ex")},
+{a:"47GX",t:"General Dentist",g:"Medical",ty:"O",u:G("47gx")},
+{a:"47HX",t:"Periodontist",g:"Medical",ty:"O",u:G("47hx")},
+{a:"47KX",t:"Pediatric Dentist",g:"Medical",ty:"O",u:G("47kx")},
+{a:"47PX",t:"Prosthodontist",g:"Medical",ty:"O",u:G("47px")},
+{a:"47SX",t:"Oral & Maxillofacial Pathologist",g:"Medical",ty:"O",u:G("47sx")},
+{a:"48AX",t:"Aerospace Medicine",g:"Medical",ty:"O",u:G("48ax")},
+{a:"48GX",t:"General Medical Officer",g:"Medical",ty:"O",u:G("48gx")},
+{a:"48RX",t:"Residency Trained Flight Surgeon",g:"Medical",ty:"O",u:G("48rx")},
+{a:"48VX",t:"Pilot-Physician",g:"Medical",ty:"O",u:G("48vx")},
+{a:"51JX",t:"Judge Advocate",g:"Professional",ty:"O",u:G("51jx")},
+{a:"52RX",t:"Chaplain",g:"Professional",ty:"O",u:G("52rx")},
+{a:"61DX",t:"Physicist/Nuclear Engineer",g:"Acq & Financial",ty:"O",u:G("61dx")},
+{a:"62EX",t:"Developmental Engineer",g:"Acq & Financial",ty:"O",u:G("62ex")},
+{a:"63AX",t:"Acquisition Manager",g:"Acq & Financial",ty:"O",u:G("63ax")},
+{a:"64PX",t:"Contracting",g:"Acq & Financial",ty:"O",u:G("64px")},
+{a:"65FX",t:"Financial Management",g:"Acq & Financial",ty:"O",u:G("65fx")},
+{a:"65WX",t:"Cost Analysis",g:"Acq & Financial",ty:"O",u:G("65wx")},
+{a:"71SX",t:"Special Investigations",g:"Special Investigations",ty:"O",u:G("71sx")},
+];
+
+// Sort
+data.sort((a,b) => a.a.localeCompare(b.a));
+
+let filter = 'all';
+let search = '';
+
+function isDirect(url) { return url.startsWith('https://static.e-publishing'); }
+
+function render() {
+  const filtered = data.filter(d => {
+    if (filter === 'enlisted' && d.ty !== 'E') return false;
+    if (filter === 'officer' && d.ty !== 'O') return false;
+    if (filter === 'direct' && !isDirect(d.u)) return false;
+    if (search) {
+      const s = search.toLowerCase();
+      return d.a.toLowerCase().includes(s) || d.t.toLowerCase().includes(s) || d.g.toLowerCase().includes(s);
+    }
+    return true;
+  });
+
+  const directCount = filtered.filter(d => isDirect(d.u)).length;
+  const searchCount = filtered.length - directCount;
+  const eCount = filtered.filter(d => d.ty === 'E').length;
+  const oCount = filtered.filter(d => d.ty === 'O').length;
+
+  document.getElementById('stats').innerHTML =
+    `<div>Showing <span>${filtered.length}</span> AFSCs</div>` +
+    `<div>Enlisted: <span>${eCount}</span></div>` +
+    `<div>Officer: <span>${oCount}</span></div>` +
+    `<div>Direct PDF: <span>${directCount}</span></div>` +
+    `<div>Google Search: <span>${searchCount}</span></div>`;
+
+  if (!filtered.length) {
+    document.getElementById('table-container').innerHTML = '<div class="no-results">No AFSCs match your search.</div>';
+    return;
+  }
+
+  let html = `<table><thead><tr>
+    <th>AFSC</th><th>Title</th><th>Career Group</th><th>CFETP</th>
+  </tr></thead><tbody>`;
+
+  filtered.forEach(d => {
+    const direct = isDirect(d.u);
+    const badge = d.ty === 'E'
+      ? '<span class="type-badge enlisted">ENL</span>'
+      : '<span class="type-badge officer">OFR</span>';
+    const btn = direct
+      ? `<a href="${d.u}" target="_blank" class="dl-btn direct"><span class="dl-icon">↓</span>PDF</a>`
+      : `<a href="${d.u}" target="_blank" class="dl-btn search"><span class="dl-icon">⌕</span>Search</a>`;
+
+    html += `<tr>
+      <td><span class="afsc-code">${d.a}</span> ${badge}</td>
+      <td>${d.t}</td>
+      <td class="career-group">${d.g}</td>
+      <td>${btn}</td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  document.getElementById('table-container').innerHTML = html;
+}
+
+document.getElementById('search').addEventListener('input', e => {
+  search = e.target.value;
+  render();
+});
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    filter = btn.dataset.filter;
+    render();
+  });
+});
+
+render();
+</script>
+</body>
+</html>
